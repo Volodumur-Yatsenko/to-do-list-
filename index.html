@@ -4,11 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="index.css">
     <title>Document</title>
 </head>
 <body>
-    
+    <div class="app">
+       <div class="container">
+         <header class="header">
+            <h1 class="header__title">Advanced To-Do List</h1>
+            <button class="header__btn">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </header>
+
+        <section class="info__task">
+            <div class="info__flex">
+                <div class="info__block">
+                    <span id="total" class="info__number">0</span>
+                    <span class="info__text">Total</span>
+                </div>
+                <div class="info__block">
+                    <span id="completed" class="info__number">0</span>
+                    <span class="info__text">Completed</span>
+                </div>
+                <div class="info__block">
+                    <span id="pending" class="info__number">0</span>
+                    <span class="info__text">Pending</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="form__block">
+            <input id="inputForm" type="text" class="form__input" placeholder="Add a new task..." />
+            <button id="inputButton" type="submit" class="form__btn">
+                <i class="fa-solid fa-plus"></i> Add
+            </button>
+        </section>
+
+        <section class="task__options">
+            <div class="task__filters">
+                <select id="filterSelect" class="filter__select">
+                    <option value="all">All Tasks</option>
+                    <option value="completed">Completed Tasks</option>
+                    <option value="pending">Pending Tasks</option>
+                </select>
+
+                <select  id="priorityFilter" class="filter__select">
+                    <option value="all">All Priorities</option>
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="low">Low Priority</option>
+                </select>
+
+                <select id="categoryFilter" class="filter__select">
+                    <option value="all">All Categories</option>
+                </select>
+            </div>
+
+            <div class="task__search">
+                <input id="searchInput" type="text" class="search__input" placeholder="Search tasks..." />
+                <button class="search__btn">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
+
+        </section>
+
+        <section class="task__list">
+            <ul id="taskList" class="task__items">
+                <li class="task__item">
+                    <input type="checkbox" class="task__cheackbox">
+                    <span class="task__text">Lorem ipsum dolor sit amet consectetur adipisicing elit. sudjfhniusdhfiusodhftgs</span>
+                    <span class="task__priority task__medium">MEDIUM</span>
+                    <div class="task__actions">
+                        <button class="btn__icon btn__edit">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button class="btn__icon btn__delete">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </li>
+            </ul>
+
+       </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
