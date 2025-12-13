@@ -5,6 +5,7 @@ const writeTaskInput = document.getElementById('inputForm');
 const addTaskBtn = document.getElementById('inputButton');
 const tasksList = document.getElementById('taskList');
 const modalNoTask = document.getElementById('modalNoTask');
+const totalCount = document.getElementById('total');
 
 //chenge theme on page load based on saved preference
 const savedtheme = localStorage.getItem('theme');
@@ -58,8 +59,12 @@ function renderTasks(task)  {
 if(tasks.length > 0) modalNoTask.style.display = 'none';
 tasks.forEach(task => renderTasks(task));
 
+updateTotalCount()
 //Add task event listener
 addTaskBtn.addEventListener('click', addTask);
+writeTaskInput.addEventListener('keypress', function(e)  {
+    if(e.key === 'Enter') addTask();
+});
 
 //Function to add a new task
 function addTask() {
@@ -81,8 +86,9 @@ function addTask() {
 
     writeTaskInput.value = '';
     modalNoTask.style.display = 'none'
+    updateTotalCount()
 }
-
+//Delete task event listener
 tasksList.addEventListener('click', (e) =>  {
     const target = e.target;
     const taskItem = target.closest('.btn__delete');
@@ -91,7 +97,7 @@ tasksList.addEventListener('click', (e) =>  {
     const taskId = Array.from(tasksList.children).indexOf(taskElement);
     deleteTask(taskElement, taskId);
 });
-
+//Function to delete a task
 function deleteTask (taskItem, taskId) {
     tasks.splice(taskId, 1);
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -99,9 +105,12 @@ function deleteTask (taskItem, taskId) {
     if(tasks.length === 0) {
         modalNoTask.style.display = 'block';
     }
+    updateTotalCount()
 }
-
-
+//Function to update total task count
+function updateTotalCount() {
+    totalCount.textContent = tasks.length;
+}
 
 
 

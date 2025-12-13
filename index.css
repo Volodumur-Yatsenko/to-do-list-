@@ -166,6 +166,7 @@ body {
     width: 200px;
     height: 50px;
     padding: 0 5px;
+    color: var(--text-light);
     border: 1px solid var(--border-color);
     background-color: var(--backround-color);
     border-radius: 6px;
