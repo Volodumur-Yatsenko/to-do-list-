@@ -6,6 +6,9 @@ const addTaskBtn = document.getElementById('inputButton');
 const tasksList = document.getElementById('taskList');
 const modalNoTask = document.getElementById('modalNoTask');
 const totalCount = document.getElementById('total');
+const completedCount = document.getElementById('completed');
+const pendingCount = document.getElementById('pending');
+const filterSelect = document.getElementById('filterSelect');
 
 //chenge theme on page load based on saved preference
 const savedtheme = localStorage.getItem('theme');
@@ -14,6 +17,7 @@ if(savedtheme === 'dark') {
     html.setAttribute('data-theme', 'dark');
     icon.classList.remove('fa-moon');
     icon.classList.add('fa-sun');   
+    icon.style.color = '#ffffff';
 }
 
 toggleThemeBtn.addEventListener('click', () => {
@@ -39,6 +43,7 @@ let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 function renderTasks(task)  {
     const taskItem = document.createElement('li');
         taskItem.classList.add('task__item');
+        taskItem.dataset.id = task.id;
         taskItem.innerHTML = `
             <input type="checkbox" class="task__cheackbox" ${task.completed ? 'checked' : ''}>
             <span class="task__text">${task.text}</span>
@@ -59,7 +64,7 @@ function renderTasks(task)  {
 if(tasks.length > 0) modalNoTask.style.display = 'none';
 tasks.forEach(task => renderTasks(task));
 
-updateTotalCount()
+updateAllCount()
 //Add task event listener
 addTaskBtn.addEventListener('click', addTask);
 writeTaskInput.addEventListener('keypress', function(e)  {
@@ -86,34 +91,77 @@ function addTask() {
 
     writeTaskInput.value = '';
     modalNoTask.style.display = 'none'
-    updateTotalCount()
+    updateAllCount()
 }
+
 //Delete task event listener
 tasksList.addEventListener('click', (e) =>  {
     const target = e.target;
     const taskItem = target.closest('.btn__delete');
-    if(!taskItem) return;
-    const taskElement = taskItem.closest('.task__item');
-    const taskId = Array.from(tasksList.children).indexOf(taskElement);
-    deleteTask(taskElement, taskId);
+    if(taskItem) { 
+        const taskElement = taskItem.closest('.task__item');
+        const taskId = taskElement.dataset.id;
+        deleteTask(taskElement, taskId);
+    }
+    if(target.classList.contains('task__cheackbox')) {
+        const taskElement = target.closest('.task__item');
+        const taskId = taskElement.dataset.id;
+        const task = tasks.find(t => t.id == taskId);
+        task.completed = target.checked;
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        updateAllCount();
+    }
+
 });
+
 //Function to delete a task
 function deleteTask (taskItem, taskId) {
-    tasks.splice(taskId, 1);
+    tasks = tasks.filter(task => task.id != taskId);
     localStorage.setItem('tasks', JSON.stringify(tasks));
     tasksList.removeChild(taskItem);
     if(tasks.length === 0) {
         modalNoTask.style.display = 'block';
     }
-    updateTotalCount()
+    updateAllCount()
 }
+
 //Function to update total task count
-function updateTotalCount() {
+function updateAllCount() {
     totalCount.textContent = tasks.length;
+    completedCount.textContent = tasks.filter(task => task.completed).length;
+    pendingCount.textContent = tasks.filter(task => !task.completed).length;
 }
 
 
+filterSelect.addEventListener('change', () =>  {
+    const filterValue = filterSelect.value;
+    const taskItems = tasksList.querySelectorAll('.task__item');
 
+    taskItems.forEach(item => {
+        const ifCompleted = item.querySelector('.task__cheackbox').checked;
+        if(filterValue === 'all') {
+            item.style.display = 'flex';
+        } else if(filterValue === 'completed') {
+            if(ifCompleted) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        }  else if(filterValue === 'pending') {
+            if(!ifCompleted) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        }
+    });
+    const visibleTasks = Array.from(taskItems).filter(item => item.style.display === 'flex');
+    if(visibleTasks.length === 0) {
+        modalNoTask.style.display = 'block';
+    } else {
+        modalNoTask.style.display = 'none';
+    }
+});
 
 
 
