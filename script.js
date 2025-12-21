@@ -9,6 +9,8 @@ const totalCount = document.getElementById('total');
 const completedCount = document.getElementById('completed');
 const pendingCount = document.getElementById('pending');
 const filterSelect = document.getElementById('filterSelect');
+const modalWindow = document.getElementById('taskDetailsModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
 
 //chenge theme on page load based on saved preference
 const savedtheme = localStorage.getItem('theme');
@@ -94,10 +96,22 @@ function addTask() {
     updateAllCount()
 }
 
+closeModalBtn.addEventListener('click', closeModal);
+document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && modalWindow.style.display === 'block') {
+        closeModal();
+    }
+});
+
+function closeModal() {
+    modalWindow.style.display = 'none';
+}
+
 //Delete task event listener
 tasksList.addEventListener('click', (e) =>  {
     const target = e.target;
     const taskItem = target.closest('.btn__delete');
+    const editBtn = target.closest('.btn__edit');
     if(taskItem) { 
         const taskElement = taskItem.closest('.task__item');
         const taskId = taskElement.dataset.id;
@@ -110,6 +124,12 @@ tasksList.addEventListener('click', (e) =>  {
         task.completed = target.checked;
         localStorage.setItem('tasks', JSON.stringify(tasks));
         updateAllCount();
+    }
+    if(editBtn) {
+        const taskElement = editBtn.closest('.task__item');
+        const taskId = taskElement.dataset.id;
+        const task = tasks.find(t => t.id == taskId);
+        modalWindow.style.display = 'block';
     }
 
 });

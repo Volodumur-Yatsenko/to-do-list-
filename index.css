@@ -14,12 +14,14 @@
     --low-color: #17a2b8;
     --low-backround: rgba(23, 162, 184, 0.1);
     --bg-secondary: #f8f9fa;
+    --bg-btn: #c7cdcf;
     --overlay-bg: rgba(0, 0, 0, 0.5);
 }
 [data-theme="dark"] {
-    --primary-color: #5d8acd;
-    --primary-hover: #4a7bc1;
+    --primery-color: #5d8acd;
+    --primery-hover: #4a7bc1;
     --text-light: #fff;
+    --bg-btn: #343a40;
     --backround-color: #212529;
     --bg-secondary: #343a40;
     --border-color: #495057;
@@ -340,19 +342,25 @@ h2.modal-title {
     gap: 15px;
 }
 label {
+    color: var(--text-light);
     font-weight: 500;
     margin-bottom: 5px;
 }
 .modal-body {
     margin-top: 10px;
 }
-.form-control{
+.form-control {
     width: 100%;
     padding: 8px;
+    background-color: var(--backround-color);
+    color: var(--text-light);
     border: 1px solid var(--border-color);
     border-radius: 5px;
     font-size: 16px;
     margin-top: 10px;
+}
+[data-theme="dark"] {
+    color-scheme: dark;
 }
 .form-control:focus {
     outline: none;
@@ -405,7 +413,7 @@ label {
     transition: all 0.3s ease;
 }
 .btn-secondary:hover {
-    background-color: var(--text-light);
-    color: var(--secondary-color);
+    background-color: var(--bg-btn);
+    color: var(--text-light);
     transition: all 0.3s ease;
 }
