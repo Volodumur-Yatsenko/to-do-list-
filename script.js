@@ -166,6 +166,7 @@ function deleteTask (taskItem, taskId) {
         modalNoTask.style.display = 'block';
     }
     updateAllCount()
+    checkVisibleTasks()
 }
 
 //Function to update total task count
@@ -175,6 +176,15 @@ function updateAllCount() {
     pendingCount.textContent = tasks.filter(task => !task.completed).length;
 }
 
+function checkVisibleTasks() {
+    const taskItems = tasksList.querySelectorAll('.task__item');
+    const visibleTasks = Array.from(taskItems).filter(item => item.style.display !== 'none');
+    if(visibleTasks.length === 0) {
+        modalNoTask.style.display = 'block';
+    } else {
+        modalNoTask.style.display = 'none';
+    }
+}
 
 filterSelect.addEventListener('change', () =>  {
     const filterValue = filterSelect.value;
@@ -198,12 +208,7 @@ filterSelect.addEventListener('change', () =>  {
             }
         }
     });
-    const visibleTasks = Array.from(taskItems).filter(item => item.style.display === 'flex');
-    if(visibleTasks.length === 0) {
-        modalNoTask.style.display = 'block';
-    } else {
-        modalNoTask.style.display = 'none';
-    }
+    checkVisibleTasks()
 });
 
 filterPriority.addEventListener('change', () => {
@@ -220,12 +225,10 @@ filterPriority.addEventListener('change', () => {
             item.style.display = 'none';
         }
     });
+    checkVisibleTasks()
 });
 
-function renderAllTasks() {
-    tasksList.innerHTML = '';
-    tasks.forEach(task => renderTasks(task));
-}
+
 
 function updateTaskVisibility(taskElement) {
     const filterValue = filterPriority.value;
@@ -233,20 +236,17 @@ function updateTaskVisibility(taskElement) {
     const checkbox = taskElement.querySelector('.task__cheackbox');
     const taskPriority = taskElement.querySelector('.task__priority').textContent.toLowerCase();
     
-    // Фільтр по completed / pending
     let visible = false;
     if(selectFilterValue === 'all') visible = true;
     else if(selectFilterValue === 'completed' && checkbox.checked) visible = true;
     else if(selectFilterValue === 'pending' && !checkbox.checked) visible = true;
     
-    // Додаємо фільтр по пріоритету
     if(filterValue !== 'all' && taskPriority !== filterValue) visible = false;
 
     taskElement.style.display = visible ? 'flex' : 'none';
 }
 
 saveTaskBtn.addEventListener('click', () => {
-    console.log('Save clicked');
     if(currentTaskId === null) return;
 
     const task = tasks.find(t => t.id === currentTaskId);
@@ -264,16 +264,13 @@ saveTaskBtn.addEventListener('click', () => {
     const taskElement = tasksList.querySelector(`.task__item[data-id="${currentTaskId}"]`);
     if(!taskElement) return;
 
-    // Оновлюємо текст
     taskElement.querySelector('.task__text').textContent = task.text;
 
-    // Оновлюємо пріоритет
     const priorityEl = taskElement.querySelector('.task__priority');
     priorityEl.classList.remove('task__low', 'task__medium', 'task__high');
     priorityEl.classList.add(`task__${task.priority}`);
     priorityEl.textContent = task.priority;
 
-    // Оновлюємо дату
     let dueDateEl = taskElement.querySelector('.task__dueDate');
     if(!dueDateEl) {
         dueDateEl = document.createElement('span');
