@@ -16,6 +16,7 @@ const editTaskPriority = document.getElementById('editTaskPriority');
 const editTaskDueDate = document.getElementById('editTaskDueDate');
 const editTaskCategory = document.getElementById('editTaskCategory');
 const saveTaskBtn = document.getElementById('saveTaskBtn');
+const filterPriority = document.getElementById('priorityFilter');
 let currentTaskId = null;
 //chenge theme on page load based on saved preference
 const savedtheme = localStorage.getItem('theme');
@@ -47,28 +48,24 @@ toggleThemeBtn.addEventListener('click', () => {
 
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-function renderTasks(task)  {
+function renderTasks(task) {
     const taskItem = document.createElement('li');
     taskItem.classList.add('task__item');
     taskItem.dataset.id = task.id;
 
-    const priorityClass = `task__${task.priority}`; 
-    const dueDateText = task.dueDate ? ` • ${task.dueDate}` : '';
+    const priorityClass = `task__${task.priority}`;
+    const dueDateText = task.dueDate ? task.dueDate : '';
 
     taskItem.innerHTML = `
         <input type="checkbox" class="task__cheackbox" ${task.completed ? 'checked' : ''}>
         <span class="task__text">${task.text}</span>
-        <span class="task__priority ${priorityClass}">${task.priority}${dueDateText}</span>
+        <span class="task__priority ${priorityClass}">${task.priority}</span>
+        <span class="task__dueDate">${dueDateText}</span>
         <div class="task__actions">
-            <button class="btn__icon btn__edit">
-                <i class="fa-solid fa-pen-to-square"></i>
-            </button>
-            <button class="btn__icon btn__delete">
-                <i class="fa-solid fa-trash"></i>
-            </button>
+            <button class="btn__icon btn__edit"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button class="btn__icon btn__delete"><i class="fa-solid fa-trash"></i></button>
         </div>
     `;
-
     tasksList.append(taskItem);
 }
 if(tasks.length > 0) modalNoTask.style.display = 'none';
@@ -148,7 +145,7 @@ tasksList.addEventListener('click', (e) =>  {
     }
     if(editBtn) {
         const taskElement = editBtn.closest('.task__item');
-        const taskId = taskElement.dataset.id;
+        const taskId = Number(taskElement.dataset.id);
         const task = tasks.find(t => t.id == taskId);
         modalWindow.style.display = 'block';
         currentTaskId = taskId;
@@ -209,44 +206,82 @@ filterSelect.addEventListener('change', () =>  {
     }
 });
 
+filterPriority.addEventListener('change', () => {
+    const priorityValue = filterPriority.value;
+    const taskItems = tasksList.querySelectorAll('.task__item');
+    taskItems.forEach(item => {
+        const priorityEl = item.querySelector('.task__priority');
+        const taskPriority = priorityEl.textContent.toLowerCase();
+        if(priorityValue === 'all' || taskPriority.includes(priorityValue)) {
+            item.style.display = 'flex';
+        } else if(priorityValue === taskPriority) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
 function renderAllTasks() {
     tasksList.innerHTML = '';
     tasks.forEach(task => renderTasks(task));
 }
 
-saveTaskBtn.addEventListener('click', () => { 
-    if(!currentTaskId) return;
-    const task = tasks.find(t => t.id == currentTaskId);
+function updateTaskVisibility(taskElement) {
+    const filterValue = filterPriority.value;
+    const selectFilterValue = filterSelect.value; 
+    const checkbox = taskElement.querySelector('.task__cheackbox');
+    const taskPriority = taskElement.querySelector('.task__priority').textContent.toLowerCase();
+    
+    // Фільтр по completed / pending
+    let visible = false;
+    if(selectFilterValue === 'all') visible = true;
+    else if(selectFilterValue === 'completed' && checkbox.checked) visible = true;
+    else if(selectFilterValue === 'pending' && !checkbox.checked) visible = true;
+    
+    // Додаємо фільтр по пріоритету
+    if(filterValue !== 'all' && taskPriority !== filterValue) visible = false;
+
+    taskElement.style.display = visible ? 'flex' : 'none';
+}
+
+saveTaskBtn.addEventListener('click', () => {
+    console.log('Save clicked');
+    if(currentTaskId === null) return;
+
+    const task = tasks.find(t => t.id === currentTaskId);
     if(!task) return;
 
     const today = new Date().toISOString().split('T')[0];
 
     task.text = editTaskText.value.trim();
     task.priority = editTaskPriority.value;
-
-    if(editTaskDueDate.value && editTaskDueDate.value >= today) {
-        task.dueDate = editTaskDueDate.value;
-    } else {
-        task.dueDate = '';
-    }
-
+    task.dueDate = (editTaskDueDate.value && editTaskDueDate.value >= today) ? editTaskDueDate.value : '';
     task.category = editTaskCategory.value;
 
     localStorage.setItem('tasks', JSON.stringify(tasks));
 
     const taskElement = tasksList.querySelector(`.task__item[data-id="${currentTaskId}"]`);
+    if(!taskElement) return;
+
+    // Оновлюємо текст
     taskElement.querySelector('.task__text').textContent = task.text;
 
+    // Оновлюємо пріоритет
     const priorityEl = taskElement.querySelector('.task__priority');
     priorityEl.classList.remove('task__low', 'task__medium', 'task__high');
     priorityEl.classList.add(`task__${task.priority}`);
     priorityEl.textContent = task.priority;
 
-    if(task.dueDate) {
-        priorityEl.textContent = `${task.priority} • ${task.dueDate}`;
+    // Оновлюємо дату
+    let dueDateEl = taskElement.querySelector('.task__dueDate');
+    if(!dueDateEl) {
+        dueDateEl = document.createElement('span');
+        dueDateEl.classList.add('task__dueDate');
+        taskElement.insertBefore(dueDateEl, taskElement.querySelector('.task__actions'));
     }
-
+    dueDateEl.textContent = task.dueDate || '';
+    updateTaskVisibility(taskElement);
     closeModal();
 });
-   
 
