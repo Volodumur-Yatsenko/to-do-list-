@@ -201,6 +201,7 @@ body {
 }
 .task__item {
     display: flex;
+    align-items: center;
     padding: 20px;
     background-color: var(--backround-color);
     border-bottom: 2px solid var(--border-color);
@@ -219,12 +220,13 @@ body {
     border-bottom: none;
 }
 .task__cheackbox {
-    width: 20px;
-    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
     margin-top: 5px;
     cursor: pointer;
 }
 .task__text {
+    word-break: break-word;
     margin-top: 6px;
     flex-grow: 1;
     margin-left: 15px;
