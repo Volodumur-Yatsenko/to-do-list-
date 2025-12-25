@@ -422,8 +422,9 @@ label {
 }
 
 .task__dueDate {
+    min-width: 85px;
     align-items: center;
-    margin-right: 15px;
+    padding: 0 5px;
     font-size: 14px;
     color: var(--text-light);
     margin-top: 5px;
