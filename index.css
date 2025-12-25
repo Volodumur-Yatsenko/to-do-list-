@@ -427,7 +427,6 @@ label {
     padding: 0 5px;
     font-size: 14px;
     color: var(--text-light);
-    margin-top: 5px;
 }
 .category__tag {
     display: inline-block;
