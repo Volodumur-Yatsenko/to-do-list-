@@ -17,6 +17,11 @@ const editTaskDueDate = document.getElementById('editTaskDueDate');
 const editTaskCategory = document.getElementById('editTaskCategory');
 const saveTaskBtn = document.getElementById('saveTaskBtn');
 const filterPriority = document.getElementById('priorityFilter');
+const cancelBtn = document.getElementById('cancelEditBtn');
+const addCategoryBtn = document.getElementById('addCategoryBtn');
+const categoryTags = document.getElementById('categoryTags');
+const categoryFilter = document.getElementById('categoryFilter');
+const editCategoryInput = document.getElementById('editTaskCategory');
 let currentTaskId = null;
 //chenge theme on page load based on saved preference
 const savedtheme = localStorage.getItem('theme');
@@ -96,6 +101,7 @@ function addTask() {
         priority: 'medium',
         completed: false,
         dueDate: dueDate,
+        categories: [],
     }
     
     tasks.unshift(newTask);
@@ -110,10 +116,10 @@ function addTask() {
 }
 
 closeModalBtn.addEventListener('click', closeModal);
-document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape' && modalWindow.style.display === 'block') {
-        closeModal();
-    }
+    document.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape' && modalWindow.style.display === 'block') {
+            closeModal();
+        }
 });
 
 function closeModal() {
@@ -123,6 +129,8 @@ function closeModal() {
     editTaskDueDate.value = '';
     editTaskCategory.value = '';
     currentTaskId = null;
+    tempCategories = [];
+    categoryTags.innerHTML = '';
 }
 
 //Delete task event listener
@@ -153,6 +161,8 @@ tasksList.addEventListener('click', (e) =>  {
         editTaskPriority.value = task.priority;
         editTaskDueDate.value = task.dueDate || '';
         editTaskCategory.value = task.category || '';
+        tempCategories = [...(task.categories || [])];
+        renderCategoryTags();
     }
 
 });
@@ -258,6 +268,7 @@ saveTaskBtn.addEventListener('click', () => {
     task.priority = editTaskPriority.value;
     task.dueDate = (editTaskDueDate.value && editTaskDueDate.value >= today) ? editTaskDueDate.value : '';
     task.category = editTaskCategory.value;
+    task.categories = [...tempCategories];
 
     localStorage.setItem('tasks', JSON.stringify(tasks));
 
@@ -279,6 +290,79 @@ saveTaskBtn.addEventListener('click', () => {
     }
     dueDateEl.textContent = task.dueDate || '';
     updateTaskVisibility(taskElement);
+    updateCategoryFilter();
     closeModal();
 });
 
+cancelBtn.addEventListener('click', () => {
+    closeModal();
+});
+
+let tempCategories = [];
+
+addCategoryBtn.addEventListener('click', () => {
+   const value = editTaskCategory.value.trim();
+    if (!value) return;
+    if (tempCategories.includes(value)) return;
+
+    tempCategories.push(value); 
+    editTaskCategory.value = '';
+    renderCategoryTags();
+});
+
+function renderCategoryTags() {
+    categoryTags.innerHTML = '';
+
+    tempCategories.forEach(cat => {
+        const tag = document.createElement('span');
+        tag.classList.add('category__tag');
+        tag.textContent = cat;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.classList.add('btn-icon', 'remove__category');
+        removeBtn.textContent = '×';
+        removeBtn.onclick = () => {
+            tempCategories = tempCategories.filter(c => c !== cat);
+            renderCategoryTags();
+        };
+
+        tag.appendChild(removeBtn);
+        categoryTags.appendChild(tag);
+    });
+}
+
+function updateCategoryFilter() {
+    const allCategories = new Set();
+
+    tasks.forEach(task => {
+        task.categories?.forEach(cat => allCategories.add(cat));
+    });
+
+    categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
+
+    allCategories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        categoryFilter.appendChild(option);
+    });
+}
+
+updateCategoryFilter();
+
+categoryFilter.addEventListener('change', () => {
+    const value = categoryFilter.value;
+
+    document.querySelectorAll('.task__item').forEach(item => {
+        const id = Number(item.dataset.id);
+        const task = tasks.find(t => t.id === id);
+
+        if (value === 'all') {
+            item.style.display = 'flex';
+        } else if (task.categories?.includes(value)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
