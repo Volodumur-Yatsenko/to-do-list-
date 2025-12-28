@@ -154,10 +154,23 @@ tasksList.addEventListener('click', (e) =>  {
         const taskElement = target.closest('.task__item');
         const taskId = taskElement.dataset.id;
         const task = tasks.find(t => t.id == taskId);
+
         task.completed = target.checked;
         localStorage.setItem('tasks', JSON.stringify(tasks));
         updateAllCount();
+
+        // Додаємо клас анімації лише на момент кліку
+        if(target.checked) {
+            taskElement.classList.add('animate-complete');
+            taskElement.addEventListener('animationend', () => {
+                taskElement.classList.remove('animate-complete');
+            }, { once: true });
+        }
+        setTimeout(() => {
+            applyFilters();
+        }, 2000); 
     }
+
     if(editBtn) {
         const taskElement = editBtn.closest('.task__item');
         const taskId = Number(taskElement.dataset.id);
@@ -174,16 +187,20 @@ tasksList.addEventListener('click', (e) =>  {
 
 });
 
+
 //Function to delete a task
-function deleteTask (taskItem, taskId) {
-    tasks = tasks.filter(task => task.id != taskId);
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    tasksList.removeChild(taskItem);
-    if(tasks.length === 0) {
-        modalNoTask.style.display = 'block';
-    }
-    updateAllCount()
-    checkVisibleTasks()
+function deleteTask(taskItem, taskId) {
+    taskItem.classList.add('removing');
+
+    taskItem.addEventListener('animationend', () => {
+        taskItem.remove();
+
+        tasks = tasks.filter(task => task.id != taskId);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+
+        updateAllCount();
+        checkVisibleTasks();
+    }, { once: true }); 
 }
 
 //Function to update total task count
