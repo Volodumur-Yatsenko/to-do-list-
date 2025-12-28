@@ -379,29 +379,32 @@ function addDragEvents(taskItem) {
     });
 }
 
-tasksList.addEventListener('dragover', (e) => {
-    e.preventDefault();
+tasksList.addEventListener('click', (e) => {
+    const priorityEl = e.target.closest('.task__priority');
+    if (!priorityEl) return;
 
-    const dragging = document.querySelector('.dragging');
-    if (!dragging) return;
+    const taskItem = priorityEl.closest('.task__item');
+    const taskId = Number(taskItem.dataset.id);
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
 
-    const containerRect = tasksList.getBoundingClientRect();
-    const scrollThreshold = 30; 
-    const scrollSpeed = 5;      
+    // цикл пріоритетів
+    const priorities = ['low', 'medium', 'high'];
+    let currentIndex = priorities.indexOf(task.priority);
+    let nextIndex = (currentIndex + 1) % priorities.length;
+    task.priority = priorities[nextIndex];
 
-    if (e.clientY < containerRect.top + scrollThreshold) {
-        tasksList.scrollTop -= scrollSpeed;
-    } else if (e.clientY > containerRect.bottom - scrollThreshold) {
-        tasksList.scrollTop += scrollSpeed;
-    }
+    // оновлюємо DOM
+    priorityEl.classList.remove('task__low', 'task__medium', 'task__high');
+    priorityEl.classList.add(`task__${task.priority}`);
+    priorityEl.textContent = task.priority;
 
-    const afterElement = getDragAfterElement(tasksList, e.clientY);
-    if (afterElement == null) {
-        tasksList.appendChild(dragging);
-    } else {
-        tasksList.insertBefore(dragging, afterElement);
-    }
+    // зберігаємо
+    localStorage.setItem('tasks', JSON.stringify(tasks));
 
+    // можна додати легку анімацію
+    priorityEl.classList.add('priority-change');
+    setTimeout(() => priorityEl.classList.remove('priority-change'), 500);
 });
 
 tasksList.addEventListener('drop', () => {
