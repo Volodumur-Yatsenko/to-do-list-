@@ -58,6 +58,7 @@ function renderTasks(task) {
     const taskItem = document.createElement('li');
     taskItem.classList.add('task__item');
     taskItem.dataset.id = task.id;
+    taskItem.setAttribute('draggable', true);
 
     const priorityClass = `task__${task.priority}`;
     const dueDateText = task.dueDate ? task.dueDate : '';
@@ -65,13 +66,18 @@ function renderTasks(task) {
     taskItem.innerHTML = `
         <input type="checkbox" class="task__cheackbox" ${task.completed ? 'checked' : ''}>
         <span class="task__text">${task.text}</span>
-        <span class="task__priority ${priorityClass}">${task.priority}</span>
-        <span class="task__dueDate">${dueDateText}</span>
-        <div class="task__actions">
+        <div class="task__meta">
+             <span class="task__priority ${priorityClass}">${task.priority}</span>
+                <span class="task__dueDate">${dueDateText}</span>
+                <div class="task__actions">
             <button class="btn__icon btn__edit"><i class="fa-solid fa-pen-to-square"></i></button>
             <button class="btn__icon btn__delete"><i class="fa-solid fa-trash"></i></button>
         </div>
+        </div>
     `;
+    const dueDateEl = taskItem.querySelector('.task__dueDate');
+    dueDateEl.style.display = task.dueDate ? 'flex' : 'none';
+    addDragEvents(taskItem);
     tasksList.append(taskItem);
 }
 if(tasks.length > 0) modalNoTask.style.display = 'none';
@@ -197,63 +203,11 @@ function checkVisibleTasks() {
     }
 }
 
-filterSelect.addEventListener('change', () =>  {
-    const filterValue = filterSelect.value;
-    const taskItems = tasksList.querySelectorAll('.task__item');
+filterSelect.addEventListener('change', applyFilters);
 
-    taskItems.forEach(item => {
-        const ifCompleted = item.querySelector('.task__cheackbox').checked;
-        if(filterValue === 'all') {
-            item.style.display = 'flex';
-        } else if(filterValue === 'completed') {
-            if(ifCompleted) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        }  else if(filterValue === 'pending') {
-            if(!ifCompleted) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        }
-    });
-    checkVisibleTasks()
-});
+filterPriority.addEventListener('change', applyFilters);
 
-filterPriority.addEventListener('change', () => {
-    const priorityValue = filterPriority.value;
-    const taskItems = tasksList.querySelectorAll('.task__item');
-    taskItems.forEach(item => {
-        const priorityEl = item.querySelector('.task__priority');
-        const taskPriority = priorityEl.textContent.toLowerCase();
-        if(priorityValue === 'all' || taskPriority.includes(priorityValue)) {
-            item.style.display = 'flex';
-        } else if(priorityValue === taskPriority) {
-            item.style.display = 'flex';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-    checkVisibleTasks()
-});
-
-searchInput.addEventListener('input', (e) => {
-   const currentValue = e.target.value;
-   resultSearchInput =  currentValue.toLowerCase().trim();
-
-   const taskItems = tasksList.querySelectorAll('.task__item');
-   taskItems.forEach(item => {
-        const taskText = item.querySelector('.task__text').textContent.toLowerCase();
-        if(taskText.includes(resultSearchInput)) {
-            item.style.display = 'flex';
-        } else {
-            item.style.display = 'none';
-        }
-   });
-   checkVisibleTasks()
-});
+searchInput.addEventListener('input', applyFilters);
 
 let resultSearchInput = '';
 
@@ -306,6 +260,7 @@ saveTaskBtn.addEventListener('click', () => {
         taskElement.insertBefore(dueDateEl, taskElement.querySelector('.task__actions'));
     }
     dueDateEl.textContent = task.dueDate || '';
+    dueDateEl.style.display = task.dueDate ? 'flex' : 'none';
     updateTaskVisibility(taskElement);
     updateCategoryFilter();
     closeModal();
@@ -367,19 +322,93 @@ function updateCategoryFilter() {
 
 updateCategoryFilter();
 
-categoryFilter.addEventListener('change', () => {
-    const value = categoryFilter.value;
+categoryFilter.addEventListener('change', applyFilters);
+
+function applyFilters() {
+    const statusFilter = filterSelect.value;         
+    const priorityFilterValue = filterPriority.value; 
+    const categoryFilterValue = categoryFilter.value; 
+    const searchText = searchInput.value.toLowerCase().trim(); 
 
     document.querySelectorAll('.task__item').forEach(item => {
+        const taskId = Number(item.dataset.id);
+        const task = tasks.find(t => t.id === taskId);
+
+        let visible = true;
+
+        if(statusFilter === 'completed' && !task.completed) visible = false;
+        if(statusFilter === 'pending' && task.completed) visible = false;
+
+        if(priorityFilterValue !== 'all' && task.priority !== priorityFilterValue) visible = false;
+
+        if(categoryFilterValue !== 'all' && !task.categories.includes(categoryFilterValue)) visible = false;
+
+        if(searchText && !task.text.toLowerCase().includes(searchText)) visible = false;
+
+        item.style.display = visible ? 'flex' : 'none';
+    });
+
+    checkVisibleTasks(); 
+}
+
+function addDragEvents(taskItem) {
+    taskItem.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', taskItem.dataset.id);
+        taskItem.classList.add('dragging');
+    });
+
+    taskItem.addEventListener('dragend', () => {
+        taskItem.classList.remove('dragging');
+    });
+}
+
+tasksList.addEventListener('dragover', (e) => {
+    e.preventDefault();
+
+    const dragging = document.querySelector('.dragging');
+    if (!dragging) return;
+
+    const containerRect = tasksList.getBoundingClientRect();
+    const scrollThreshold = 30; 
+    const scrollSpeed = 5;      
+
+    if (e.clientY < containerRect.top + scrollThreshold) {
+        tasksList.scrollTop -= scrollSpeed;
+    } else if (e.clientY > containerRect.bottom - scrollThreshold) {
+        tasksList.scrollTop += scrollSpeed;
+    }
+
+    const afterElement = getDragAfterElement(tasksList, e.clientY);
+    if (afterElement == null) {
+        tasksList.appendChild(dragging);
+    } else {
+        tasksList.insertBefore(dragging, afterElement);
+    }
+
+});
+
+tasksList.addEventListener('drop', () => {
+    const newTasksOrder = [];
+    tasksList.querySelectorAll('.task__item').forEach(item => {
         const id = Number(item.dataset.id);
         const task = tasks.find(t => t.id === id);
-
-        if (value === 'all') {
-            item.style.display = 'flex';
-        } else if (task.categories?.includes(value)) {
-            item.style.display = 'flex';
-        } else {
-            item.style.display = 'none';
-        }
+        if(task) newTasksOrder.push(task);
     });
+    tasks = newTasksOrder;
+    localStorage.setItem('tasks', JSON.stringify(tasks));
 });
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.task__item:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if(offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
