@@ -22,6 +22,7 @@ const addCategoryBtn = document.getElementById('addCategoryBtn');
 const categoryTags = document.getElementById('categoryTags');
 const categoryFilter = document.getElementById('categoryFilter');
 const editCategoryInput = document.getElementById('editTaskCategory');
+const searchInput = document.getElementById('searchInput');
 let currentTaskId = null;
 //chenge theme on page load based on saved preference
 const savedtheme = localStorage.getItem('theme');
@@ -238,7 +239,23 @@ filterPriority.addEventListener('change', () => {
     checkVisibleTasks()
 });
 
+searchInput.addEventListener('input', (e) => {
+   const currentValue = e.target.value;
+   resultSearchInput =  currentValue.toLowerCase().trim();
 
+   const taskItems = tasksList.querySelectorAll('.task__item');
+   taskItems.forEach(item => {
+        const taskText = item.querySelector('.task__text').textContent.toLowerCase();
+        if(taskText.includes(resultSearchInput)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+   });
+   checkVisibleTasks()
+});
+
+let resultSearchInput = '';
 
 function updateTaskVisibility(taskElement) {
     const filterValue = filterPriority.value;
