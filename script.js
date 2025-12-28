@@ -370,8 +370,12 @@ function applyFilters() {
 
 function addDragEvents(taskItem) {
     taskItem.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', taskItem.dataset.id);
+        if (e.target.closest('.task__priority') || e.target.closest('.btn__icon')) {
+            e.preventDefault();
+            return;
+        }
         taskItem.classList.add('dragging');
+        e.dataTransfer.effectAllowed = "move";
     });
 
     taskItem.addEventListener('dragend', () => {
@@ -407,6 +411,19 @@ tasksList.addEventListener('click', (e) => {
     setTimeout(() => priorityEl.classList.remove('priority-change'), 500);
 });
 
+tasksList.addEventListener('dragover', (e) => {
+    e.preventDefault(); 
+    const dragging = document.querySelector('.dragging');
+    if (!dragging) return;
+
+    const afterElement = getDragAfterElement(tasksList, e.clientY);
+    if (afterElement == null) {
+        tasksList.appendChild(dragging);
+    } else {
+        tasksList.insertBefore(dragging, afterElement);
+    }
+});
+
 tasksList.addEventListener('drop', () => {
     const newTasksOrder = [];
     tasksList.querySelectorAll('.task__item').forEach(item => {
@@ -421,13 +438,13 @@ tasksList.addEventListener('drop', () => {
 function getDragAfterElement(container, y) {
     const draggableElements = [...container.querySelectorAll('.task__item:not(.dragging)')];
 
-    return draggableElements.reduce((closest, child) => {
+    let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+    draggableElements.forEach(child => {
         const box = child.getBoundingClientRect();
         const offset = y - box.top - box.height / 2;
-        if(offset < 0 && offset > closest.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closest;
+        if (offset < 0 && offset > closest.offset) {
+            closest = { offset: offset, element: child };
         }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
+    });
+    return closest.element;
 }
